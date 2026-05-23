@@ -3,15 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Future Hub | Next-Gen Interface</title>
+    <title>Brawl Battle Royale | Web Launcher</title>
+    
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.26.1/full/pyodide.js"></script>
+
     <style>
-        /* GLOABLE STYLES */
         :root {
-            --bg-color: #0a0a12;
-            --panel-bg: #121225;
-            --accent-neon: #00f0ff;
+            --bg-color: #0c0c12;
+            --panel-bg: #161626;
             --accent-pink: #ff007f;
-            --text-color: #e0e0ff;
+            --accent-cyan: #00f0ff;
         }
 
         * {
@@ -23,225 +24,615 @@
 
         body {
             background-color: var(--bg-color);
-            color: var(--text-color);
-            overflow-x: hidden;
+            color: #e0e0ff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        /* LAUNCHER SCREEN */
+        .launcher-card {
+            text-align: center;
+            background: var(--panel-bg);
+            padding: 50px;
+            border-radius: 16px;
+            box-shadow: 0 0 35px rgba(255, 0, 127, 0.25);
+            border: 1px solid rgba(255, 0, 127, 0.3);
+            max-width: 650px;
+            width: 90%;
+            transition: opacity 0.5s ease;
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin-bottom: 15px;
+            background: linear-gradient(45deg, var(--accent-cyan), var(--accent-pink));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 10px rgba(0, 240, 255, 0.2));
+        }
+
+        p {
+            color: #aaaacf;
+            font-size: 1.1rem;
+            margin-bottom: 35px;
             line-height: 1.6;
         }
 
-        /* NAVIGATION */
-        nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px 5%;
-            background: rgba(10, 10, 18, 0.8);
-            backdrop-filter: blur(10px);
-            position: fixed;
-            width: 100%;
-            top: 0;
-            z-index: 1000;
-            border-bottom: 1px solid rgba(0, 240, 255, 0.2);
-        }
-
-        .logo {
-            font-size: 24px;
-            font-weight: bold;
-            color: var(--accent-neon);
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            text-shadow: 0 0 10px var(--accent-neon);
-        }
-
-        .nav-links {
-            display: flex;
-            list-style: none;
-        }
-
-        .nav-links li {
-            margin-left: 30px;
-        }
-
-        .nav-links a {
-            color: var(--text-color);
-            text-decoration: none;
-            font-weight: 500;
-            transition: 0.3s;
-            text-transform: uppercase;
-            font-size: 14px;
-        }
-
-        .nav-links a:hover {
-            color: var(--accent-neon);
-            text-shadow: 0 0 8px var(--accent-neon);
-        }
-
-        /* HERO SECTION */
-        .hero {
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            padding: 0 20px;
-            background: radial-gradient(circle at center, #1a1a3a 0%, var(--bg-color) 70%);
-            position: relative;
-        }
-
-        .hero h1 {
-            font-size: 4rem;
-            text-transform: uppercase;
-            letter-spacing: 4px;
-            margin-bottom: 20px;
-            background: linear-gradient(45deg, var(--accent-neon), var(--accent-pink));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            animation: pulse 3s infinite alternate;
-        }
-
-        .hero p {
-            font-size: 1.2rem;
-            max-width: 600px;
-            margin-bottom: 40px;
-            color: #aaaacf;
-        }
-
-        /* BUTTONS */
-        .btn {
-            position: relative;
-            padding: 12px 35px;
+        .btn-launch {
             background: transparent;
-            color: var(--accent-neon);
-            font-size: 16px;
+            color: var(--accent-cyan);
+            border: 2px solid var(--accent-cyan);
+            padding: 15px 45px;
+            font-size: 18px;
             font-weight: bold;
             text-transform: uppercase;
-            border: 2px solid var(--accent-neon);
+            border-radius: 6px;
             cursor: pointer;
-            border-radius: 4px;
-            overflow: hidden;
-            transition: 0.4s;
             box-shadow: 0 0 15px rgba(0, 240, 255, 0.2);
+            transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        .btn:hover {
-            background: var(--accent-neon);
+        .btn-launch:hover:not(:disabled) {
+            background: var(--accent-cyan);
             color: var(--bg-color);
-            box-shadow: 0 0 30px var(--accent-neon);
-            transform: translateY(-2px);
+            box-shadow: 0 0 30px var(--accent-cyan);
+            transform: scale(1.05);
         }
 
-        /* CONTENT SECTION */
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 100px 20px;
+        .btn-launch:disabled {
+            border-color: #555;
+            color: #888;
+            cursor: not-allowed;
         }
 
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
-            margin-top: 50px;
+        .status-container {
+            margin-top: 25px;
+            font-family: monospace;
+            font-size: 14px;
+            color: #8888aa;
+            min-height: 20px;
         }
 
-        .card {
-            background: var(--panel-bg);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            padding: 40px 30px;
-            border-radius: 8px;
-            transition: 0.3s;
-            position: relative;
-        }
-
-        .card::before {
-            content: '';
+        /* GAME CANVAS SCREEN */
+        #game-wrapper {
+            display: none;
             position: absolute;
             top: 0;
             left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #000;
+        }
+
+        /* Pygame Leinwand */
+        canvas {
             width: 100%;
             height: 100%;
-            border-radius: 8px;
-            border: 1px solid transparent;
-            background: linear-gradient(45deg, var(--accent-neon), var(--accent-pink)) border-box;
-            -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
-            -webkit-mask-composite: destination-out;
-            mask-composite: exclude;
-            opacity: 0;
-            transition: 0.3s;
-        }
-
-        .card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 10px 30px rgba(0, 240, 255, 0.1);
-        }
-
-        .card:hover::before {
-            opacity: 1;
-        }
-
-        .card h3 {
-            color: var(--accent-neon);
-            font-size: 22px;
-            margin-bottom: 15px;
-        }
-
-        /* INTERACTIVE EXPERIMENT SECTION */
-        .interactive-zone {
-            background: #0f0f22;
-            border-radius: 12px;
-            padding: 40px;
-            text-align: center;
-            border: 1px dashed var(--accent-pink);
-            margin-top: 50px;
-        }
-
-        .status-display {
-            font-family: monospace;
-            font-size: 1.5rem;
-            margin: 20px 0;
-            color: var(--accent-pink);
-            text-shadow: 0 0 10px var(--accent-pink);
-        }
-
-        /* ANIMATIONS */
-        @keyframes pulse {
-            0% { filter: drop-shadow(0 0 2px var(--accent-neon)); }
-            100% { filter: drop-shadow(0 0 15px var(--accent-neon)); }
-        }
-
-        /* RESPONSIVE DESIGN */
-        @media (max-width: 768px) {
-            .hero h1 { font-size: 2.5rem; }
-            .nav-links { display: none; } /* Vereinfacht für Core-Code */
+            display: block;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
         }
     </style>
 </head>
 <body>
 
-    <nav>
-        <div class="logo">Core.OS</div>
-        <ul class="nav-links">
-            <li><a href="#home">Home</a></li>
-            <li><a href="#features">Features</a></li>
-            <li><a href="#terminal">Terminal</a></li>
-        </ul>
-    </nav>
-
-    <section class="hero" id="home">
-        <h1>Welcome to the Future</h1>
-        <p>Ein interaktives, hochperformantes Interface-Design, entwickelt für maximale visuelle Dynamik.</p>
-        <button class="btn" onclick="triggerAlert()">System Booten</button>
-    </section>
-
-    <div class="container" id="features">
-        <h2 style="text-align: center; font-size: 32px; text-transform: uppercase; letter-spacing: 2px;">System-Spezifikationen</h2>
+    <div class="launcher-card" id="launcher">
+        <h1>Brawl Royale</h1>
+        <p>Ein vollwertiges Battle Royale direkt im Browser. Tritt gegen 29 KI-Gegner an, sammle Power-Cubes und fliehe vor dem schrumpfenden Sturm.</p>
         
-        <div class="grid">
-            <div class="card">
-                <h3>01 // Ultra Fast</h3>
-                <p>Optimierter Code ohne unnötigen Ballast. Geladen in Lichtgeschwindigkeit für die beste User Experience.</p>
-            </div>
-            
-            <div class="card">
-                <h3>02 // Cyber Glow</h3>
-                <p>
+        <button class="btn-launch" id="start-btn" onclick="initAndRunGame()">Spiel Starten</button>
+        
+        <div class="status-container" id="status-text">System bereit. Klicke, um Python & Pygame zu initialisieren...</div>
+    </div>
+
+    <div id="game-wrapper" id="canvas-container">
+        <canvas id="canvas" oncontextmenu="event.preventDefault()"></canvas>
+    </div>
+
+    <script>
+        async function initAndRunGame() {
+            const btn = document.getElementById('start-btn');
+            const status = document.getElementById('status-text');
+            const launcher = document.getElementById('launcher');
+            const wrapper = document.getElementById('game-wrapper');
+
+            btn.disabled = true;
+            btn.innerText = "Kompiliere...";
+            status.innerText = "Schritt 1/3: Lade Python WebAssembly-Laufzeitumgebung...";
+
+            try {
+                // 1. Pyodide Core initialisieren
+                let pyodide = await loadPyodide();
+                
+                status.innerText = "Schritt 2/3: Installiere Pygame-Bibliotheken im Sandbox-System...";
+                // 2. micropip nutzen um pygame-ce für WASM zu installieren
+                await pyodide.loadPackage("micropip");
+                const micropip = pyodide.pyimport("micropip");
+                await micropip.install("pygame-ce");
+
+                status.innerText = "Schritt 3/3: Binde Display-Treiber (Canvas) ein und starte Spiel-Engine...";
+
+                // UI-Wechsel: Launcher weg, Canvas her
+                launcher.style.display = 'none';
+                wrapper.style.display = 'block';
+
+                // Dein exakter Python-Spielcode mit asyncio-Loop für reibungslose Browser-Ausführung
+                const pythonGameCode = `
+import pygame
+import math
+import random
+import sys
+import json
+import os
+import asyncio
+
+MAP_WIDTH, MAP_HEIGHT = 4000, 2400 
+SCREEN_WIDTH, SCREEN_HEIGHT = 1600, 900 
+
+pygame.init()
+flags = pygame.SCALED | pygame.RESIZABLE
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), flags)
+pygame.display.set_caption("Brawl Battle Royale: The Storm")
+clock = pygame.time.Clock()
+
+GREEN1, GREEN2 = (60, 160, 60), (50, 140, 50)
+BLUE_WATER = (40, 130, 230)
+RED, DARK_RED = (255, 50, 50), (150, 20, 20)
+BLACK, WHITE = (15, 15, 15), (250, 250, 250)
+GRAY, BROWN = (100, 100, 100), (90, 60, 30)
+YELLOW, GOLD = (255, 230, 0), (255, 190, 0)
+CUBE_GREEN = (50, 255, 50)
+ZONE_COLOR = (150, 0, 255, 100) 
+
+font = pygame.font.SysFont("Helvetica", 28, bold=True)
+small_font = pygame.font.SysFont("Helvetica", 18, bold=True)
+title_font = pygame.font.SysFont("Helvetica", 72, bold=True)
+
+SAVE_FILE = "savegame.json"
+
+def load_data():
+    if os.path.exists(SAVE_FILE):
+        try:
+            with open(SAVE_FILE, "r") as f:
+                return json.load(f).get("trophies", 0)
+        except:
+            return 0
+    return 0
+
+def save_data(trophies):
+    with open(SAVE_FILE, "w") as f:
+        json.dump({"trophies": trophies}, f)
+
+class Camera:
+    def __init__(self, width, height):
+        self.camera = pygame.Rect(0, 0, width, height)
+        self.width = width
+        self.height = height
+
+    def apply(self, entity):
+        if isinstance(entity, pygame.Rect):
+            return entity.move(self.camera.topleft)
+        return entity.rect.move(self.camera.topleft)
+
+    def apply_pos(self, pos):
+        return (pos[0] + self.camera.x, pos[1] + self.camera.y)
+
+    def update(self, target):
+        x = -target.rect.centerx + int(SCREEN_WIDTH / 2)
+        y = -target.rect.centery + int(SCREEN_HEIGHT / 2)
+        self.camera.x += (x - self.camera.x) * 0.1
+        self.camera.y += (y - self.camera.y) * 0.1
+        self.camera.x = min(0, max(-(MAP_WIDTH - SCREEN_WIDTH), self.camera.x))
+        self.camera.y = min(0, max(-(MAP_HEIGHT - SCREEN_HEIGHT), self.camera.y))
+
+class Particle:
+    def __init__(self, x, y, color):
+        self.x, self.y = x, y
+        self.vx = random.uniform(-3, 3)
+        self.vy = random.uniform(-3, 3)
+        self.timer = random.uniform(10, 25)
+        self.color = color
+        self.size = random.uniform(3, 6)
+
+    def update(self, dt_mult):
+        self.x += self.vx * dt_mult
+        self.y += self.vy * dt_mult
+        self.timer -= 1 * dt_mult
+        self.size = max(0, self.size - 0.1 * dt_mult)
+
+    def draw(self, surf, cam):
+        if self.timer > 0 and self.size > 0:
+            pygame.draw.circle(surf, self.color, cam.apply_pos((self.x, self.y)), int(self.size))
+
+class Wall:
+    def __init__(self, x, y, w, h):
+        self.rect = pygame.Rect(x, y, w, h)
+    def draw(self, surf, cam):
+        pygame.draw.rect(surf, BROWN, cam.apply(self.rect), border_radius=4)
+        pygame.draw.rect(surf, BLACK, cam.apply(self.rect), 2, border_radius=4)
+
+class Water:
+    def __init__(self, x, y, w, h):
+        self.rect = pygame.Rect(x, y, w, h)
+    def draw(self, surf, cam):
+        pygame.draw.rect(surf, BLUE_WATER, cam.apply(self.rect), border_radius=8)
+
+class PowerCube:
+    def __init__(self, x, y):
+        self.rect = pygame.Rect(x - 15, y - 15, 30, 30)
+        self.y_offset = 0
+        self.float_dir = 1
+        self.time_alive = 0
+
+    def draw(self, surf, cam, dt_mult):
+        self.time_alive += 0.05 * dt_mult
+        self.y_offset = math.sin(self.time_alive) * 5
+        screen_rect = cam.apply(self.rect)
+        screen_rect.y += int(self.y_offset)
+        pygame.draw.rect(surf, CUBE_GREEN, screen_rect, border_radius=5)
+        pygame.draw.rect(surf, WHITE, screen_rect, 2, border_radius=5)
+
+class Bullet:
+    def __init__(self, x, y, angle, speed, damage, color, owner, max_dist=1500):
+        self.x, self.y = float(x), float(y)
+        self.start_x, self.start_y = self.x, self.y
+        self.dx = math.cos(angle) * speed
+        self.dy = math.sin(angle) * speed
+        self.damage = damage
+        self.color = color
+        self.owner = owner
+        self.max_dist = max_dist
+        self.dead = False
+
+    def update(self, walls, dt_mult):
+        old_pos = (self.x, self.y)
+        self.x += self.dx * dt_mult
+        self.y += self.dy * dt_mult
+        dist = math.hypot(self.x - self.start_x, self.y - self.start_y)
+        if dist > self.max_dist:
+            self.dead = True
+            return
+        for wall in walls:
+            if wall.rect.clipline(old_pos, (self.x, self.y)):
+                self.dead = True
+                return
+        if not (0 <= self.x <= MAP_WIDTH and 0 <= self.y <= MAP_HEIGHT):
+            self.dead = True
+
+    def draw(self, surf, cam):
+        pos = cam.apply_pos((self.x, self.y))
+        pygame.draw.circle(surf, self.color, pos, 8)
+        pygame.draw.circle(surf, WHITE, pos, 3)
+
+class Entity:
+    def __init__(self, x, y, hp, speed, color, cooldown):
+        self.rect = pygame.Rect(x, y, 50, 50)
+        self.x, self.y = float(x), float(y)
+        self.hp, self.max_hp = float(hp), float(hp)
+        self.base_speed, self.color = float(speed), color
+        self.last_shot, self.cooldown = 0, cooldown
+        self.power_cubes = 0
+        self.zone_damage_timer = 0
+
+    @property
+    def speed(self):
+        return self.base_speed + (self.power_cubes * 0.1)
+
+    def can_shoot(self, now):
+        return now - self.last_shot >= self.cooldown
+
+    def move(self, dx, dy, walls, water_tiles, dt_mult):
+        obstacles = [w.rect for w in walls] + [wt.rect for wt in water_tiles]
+        self.x += dx * dt_mult
+        self.rect.x = int(self.x)
+        for rect in obstacles:
+            if self.rect.colliderect(rect):
+                if dx > 0: self.rect.right = rect.left; self.x = self.rect.x
+                if dx < 0: self.rect.left = rect.right; self.x = self.rect.x
+        self.y += dy * dt_mult
+        self.rect.y = int(self.y)
+        for rect in obstacles:
+            if self.rect.colliderect(rect):
+                if dy > 0: self.rect.bottom = rect.top; self.y = self.rect.y
+                if dy < 0: self.rect.top = rect.bottom; self.y = self.rect.y
+        self.rect.clamp_ip(pygame.Rect(0, 0, MAP_WIDTH, MAP_HEIGHT))
+        self.x, self.y = self.rect.x, self.rect.y
+
+    def check_zone(self, zone_center, zone_radius, now):
+        dist = math.hypot(self.rect.centerx - zone_center[0], self.rect.centery - zone_center[1])
+        if dist > zone_radius:
+            if now - self.zone_damage_timer > 1000:
+                self.hp -= 5
+                self.zone_damage_timer = now
+                return True
+        return False
+
+    def heal(self, amount):
+        self.hp = min(self.max_hp, self.hp + amount)
+
+    def draw_bars(self, surf, cam, now):
+        rel_rect = cam.apply(self.rect)
+        bx, by, bw = rel_rect.x, rel_rect.y, rel_rect.width
+        if self.power_cubes > 0:
+            cube_txt = small_font.render(f"[{self.power_cubes}]", True, WHITE)
+            surf.blit(small_font.render(f"[{self.power_cubes}]", True, BLACK), (bx + bw/2 - cube_txt.get_width()/2 + 1, by - 54))
+            surf.blit(cube_txt, (bx + bw/2 - cube_txt.get_width()/2, by - 55))
+        pygame.draw.rect(surf, BLACK, (bx, by - 15, bw, 8), border_radius=3)
+        hp_ratio = max(0, self.hp) / self.max_hp
+        hp_color = GREEN1 if hp_ratio > 0.5 else (YELLOW if hp_ratio > 0.25 else RED)
+        pygame.draw.rect(surf, hp_color, (bx, by - 15, hp_ratio * bw, 8), border_radius=3)
+        pygame.draw.rect(surf, BLACK, (bx, by - 26, bw, 6), border_radius=2)
+        ratio = min(1.0, (now - self.last_shot) / self.cooldown)
+        pygame.draw.rect(surf, GOLD if ratio >= 1.0 else (180, 100, 0), (bx, by - 26, ratio*bw, 6), border_radius=2)
+
+class Player(Entity):
+    def __init__(self, char):
+        configs = {"shelly": [15, 6.5, (150, 100, 255)], "piper": [10, 5.5, (100, 200, 255)], "elprimo": [30, 7.5, (50, 50, 150)]}
+        c = configs[char]
+        super().__init__(MAP_WIDTH//2, MAP_HEIGHT//2, c[0], c[1], c[2], 500)
+        self.char = char
+
+    def shoot(self, m_pos, cam, now):
+        if not self.can_shoot(now): return []
+        self.last_shot = now
+        world_mx = m_pos[0] - cam.camera.x
+        world_my = m_pos[1] - cam.camera.y
+        ang = math.atan2(world_my - self.rect.centery, world_mx - self.rect.centerx)
+        dmg_mult = 1.0 + (self.power_cubes * 0.20)
+        if self.char == "shelly":
+            return [Bullet(self.rect.centerx, self.rect.centery, ang + a, 22, 2 * dmg_mult, WHITE, self, 800) for a in [-0.2, 0, 0.2]]
+        elif self.char == "piper":
+            return [Bullet(self.rect.centerx, self.rect.centery, ang, 40, 7 * dmg_mult, WHITE, self, 1600)]
+        elif self.char == "elprimo":
+            return [Bullet(self.rect.centerx, self.rect.centery, ang + a, 20, 5 * dmg_mult, GOLD, self, max_dist=150) for a in [-0.4, -0.2, 0, 0.2, 0.4]]
+        return []
+
+class Enemy(Entity):
+    def __init__(self, x, y):
+        super().__init__(x, y, 15, 4.5, DARK_RED, 1200)
+        self.move_timer, self.vx, self.vy = 0, 0, 0
+
+    def update(self, all_entities, power_cubes, walls, water, bullets, now, dt_mult, zone_center, zone_radius):
+        target = None
+        min_dist = 1800
+        for other in all_entities:
+            if other == self or other.hp <= 0: continue
+            dist = math.hypot(other.rect.centerx - self.rect.centerx, other.rect.centery - self.rect.centery)
+            if dist < min_dist:
+                min_dist = dist
+                target = other
+        closest_cube = None
+        cube_dist = 800
+        for cube in power_cubes:
+            cdist = math.hypot(cube.rect.centerx - self.rect.centerx, cube.rect.centery - self.rect.centery)
+            if cdist < cube_dist:
+                cube_dist = cdist
+                closest_cube = cube
+        if now > self.move_timer:
+            dist_to_center = math.hypot(self.rect.centerx - zone_center[0], self.rect.centery - zone_center[1])
+            if dist_to_center > zone_radius - 200:
+                ang = math.atan2(zone_center[1] - self.rect.centery, zone_center[0] - self.rect.centerx)
+                self.vx, self.vy = math.cos(ang), math.sin(ang)
+            elif closest_cube and cube_dist < 400:
+                ang = math.atan2(closest_cube.rect.centery - self.rect.centery, closest_cube.rect.centerx - self.rect.centerx)
+                self.vx, self.vy = math.cos(ang), math.sin(ang)
+            elif target:
+                ang = math.atan2(target.rect.centery - self.rect.centery, target.rect.centerx - self.rect.centerx)
+                if self.hp < self.max_hp * 0.3:
+                    self.vx, self.vy = -math.cos(ang), -math.sin(ang)
+                else:
+                    self.vx, self.vy = math.cos(ang), math.sin(ang)
+            else:
+                self.vx, self.vy = random.uniform(-1, 1), random.uniform(-1, 1)
+            length = math.hypot(self.vx, self.vy)
+            if length > 0:
+                self.vx, self.vy = (self.vx/length) * self.speed, (self.vy/length) * self.speed
+            self.move_timer = now + random.randint(300, 800)
+        self.move(self.vx, self.vy, walls, water, dt_mult)
+        if target and min_dist < 800 and self.can_shoot(now):
+            self.last_shot = now
+            ang = math.atan2(target.rect.centery - self.rect.centery, target.rect.centerx - self.rect.centerx) + random.uniform(-0.1, 0.1)
+            dmg_mult = 1.0 + (self.power_cubes * 0.20)
+            bullets.append(Bullet(self.rect.centerx, self.rect.centery, ang, 16, 2 * dmg_mult, RED, self))
+
+def draw_text_with_shadow(surf, text, font, color, x, y):
+    shadow = font.render(text, True, BLACK)
+    txt = font.render(text, True, color)
+    surf.blit(shadow, (x+3, y+3))
+    surf.blit(txt, (x, y))
+
+class Game:
+    def __init__(self):
+        self.state = "MENU"
+        self.score = 0
+        self.total_trophies = load_data()
+        self.processed_result = False
+        self.walls, self.water, self.enemies, self.bullets, self.power_cubes, self.particles = [], [], [], [], [], []
+        self.player = None
+        self.camera = Camera(MAP_WIDTH, MAP_HEIGHT)
+        self.fullscreen = False
+        self.zone_center = (MAP_WIDTH//2, MAP_HEIGHT//2)
+        self.zone_radius = MAP_WIDTH
+        self.zone_surface = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
+
+    def generate_map(self):
+        self.walls.clear()
+        self.water.clear()
+        self.power_cubes.clear()
+        safe_rect = pygame.Rect(MAP_WIDTH//2 - 400, MAP_HEIGHT//2 - 400, 800, 800)
+        for _ in range(45):
+            w, h = random.choice([(300, 40), (40, 300), (200, 200)])
+            x, y = random.randint(100, MAP_WIDTH-w-100), random.randint(100, MAP_HEIGHT-h-100)
+            if not safe_rect.colliderect(pygame.Rect(x,y,w,h)):
+                if w == 200: self.water.append(Water(x, y, w, h))
+                else: self.walls.append(Wall(x, y, w, h))
+
+    def setup(self, char):
+        self.generate_map()
+        self.player = Player(char)
+        self.enemies = []
+        for _ in range(29):
+            ex, ey = random.randint(200, MAP_WIDTH-200), random.randint(200, MAP_HEIGHT-200)
+            while math.hypot(ex - self.player.rect.centerx, ey - self.player.rect.centery) < 800:
+                 ex, ey = random.randint(200, MAP_WIDTH-200), random.randint(200, MAP_HEIGHT-200)
+            self.enemies.append(Enemy(ex, ey))
+        self.bullets, self.particles, self.score, self.state = [], [], 0, "PLAY"
+        self.processed_result = False
+        self.zone_radius = MAP_WIDTH
+
+    def create_explosion(self, x, y, color, count=15):
+        for _ in range(count): self.particles.append(Particle(x, y, color))
+
+    def draw_world(self, now, dt_mult):
+        start_x = (abs(self.camera.camera.x) // 80) * 80
+        start_y = (abs(self.camera.camera.y) // 80) * 80
+        for x in range(start_x, start_x + SCREEN_WIDTH + 160, 80):
+            for y in range(start_y, start_y + SCREEN_HEIGHT + 160, 80):
+                c = GREEN1 if (x+y)//80 % 2 == 0 else GREEN2
+                pygame.draw.rect(screen, c, (x+self.camera.camera.x, y+self.camera.camera.y, 80, 80))
+        for wt in self.water: wt.draw(screen, self.camera)
+        for w in self.walls: w.draw(screen, self.camera)
+        for pc in self.power_cubes: pc.draw(screen, self.camera, dt_mult)
+        for p in self.particles: p.draw(screen, self.camera)
+        for b in self.bullets: b.draw(screen, self.camera)
+        for e in self.enemies:
+            pygame.draw.rect(screen, e.color, self.camera.apply(e), border_radius=10)
+            pygame.draw.rect(screen, BLACK, self.camera.apply(e), 2, border_radius=10)
+            e.draw_bars(screen, self.camera, now)
+        pygame.draw.rect(screen, self.player.color, self.camera.apply(self.player), border_radius=10)
+        pygame.draw.rect(screen, WHITE, self.camera.apply(self.player), 2, border_radius=10)
+        self.player.draw_bars(screen, self.camera, now)
+        if self.zone_radius < MAP_WIDTH:
+            self.zone_surface.fill(ZONE_COLOR)
+            cx, cy = self.camera.apply_pos(self.zone_center)
+            pygame.draw.circle(self.zone_surface, (0,0,0,0), (int(cx), int(cy)), int(self.zone_radius))
+            screen.blit(self.zone_surface, (0,0))
+            pygame.draw.circle(screen, RED, (int(cx), int(cy)), int(self.zone_radius), 4)
+
+    async def run(self):
+        while True:
+            dt = clock.tick(60) / 1000.0
+            dt_mult = dt * 60 
+            now = pygame.time.get_ticks()
+            m_pos = pygame.mouse.get_pos()
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT: return
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE: return
+                            
+                if self.state == "MENU" and event.type == pygame.MOUSEBUTTONDOWN:
+                    if SCREEN_WIDTH//2 - 250 <= m_pos[0] <= SCREEN_WIDTH//2 + 250:
+                        if 300 <= m_pos[1] <= 380: self.setup("shelly")
+                        elif 400 <= m_pos[1] <= 480: self.setup("piper")
+                        elif 500 <= m_pos[1] <= 580: self.setup("elprimo")
+                
+                if self.state == "PLAY" and event.type == pygame.MOUSEBUTTONDOWN:
+                    new_bullets = self.player.shoot(m_pos, self.camera, now)
+                    self.bullets.extend(new_bullets)
+
+            if self.state == "MENU":
+                screen.fill((20, 25, 30))
+                pygame.draw.circle(screen, (30, 40, 50), (SCREEN_WIDTH//2, SCREEN_HEIGHT//2), 400)
+                draw_text_with_shadow(screen, f"Trophäen: {self.total_trophies}", font, GOLD, 30, 30)
+                t = title_font.render("BRAWL ROYALE", True, WHITE)
+                screen.blit(t, (SCREEN_WIDTH//2 - t.get_width()//2, 100))
+                chars = [("Shelly (Shotgun)", (150, 100, 255)), ("Piper (Sniper)", (100, 200, 255)), ("El Primo (Nahkampf)", (50, 50, 150))]
+                for i, (name, col) in enumerate(chars):
+                    rect = pygame.Rect(SCREEN_WIDTH//2 - 250, 300 + i*100, 500, 80)
+                    hover = rect.collidepoint(m_pos)
+                    draw_col = (min(255, col[0]+30), min(255, col[1]+30), min(255, col[2]+30)) if hover else col
+                    pygame.draw.rect(screen, draw_col, rect, border_radius=15)
+                    pygame.draw.rect(screen, WHITE, rect, 3, border_radius=15)
+                    txt = font.render(name, True, WHITE)
+                    screen.blit(txt, (rect.centerx - txt.get_width()//2, rect.centery - txt.get_height()//2))
+
+            elif self.state == "PLAY":
+                keys = pygame.key.get_pressed()
+                dx = (keys[pygame.K_d]-keys[pygame.K_a]) * self.player.speed
+                dy = (keys[pygame.K_s]-keys[pygame.K_w]) * self.player.speed
+                self.player.move(dx, dy, self.walls, self.water, dt_mult)
+                self.zone_radius = max(0, self.zone_radius - 0.5 * dt_mult)
+                if self.player.check_zone(self.zone_center, self.zone_radius, now):
+                    self.create_explosion(self.player.rect.centerx, self.player.rect.centery, ZONE_COLOR, 5)
+                    if self.player.hp <= 0: self.state = "GAMEOVER"
+                for cube in self.power_cubes[:]:
+                    if self.player.rect.colliderect(cube.rect):
+                        self.power_cubes.remove(cube)
+                        self.player.power_cubes += 1
+                        self.player.max_hp += 4
+                        self.player.heal(10)
+                self.camera.update(self.player)
+                all_ents = [self.player] + self.enemies
+                for e in self.enemies[:]: 
+                    e.update(all_ents, self.power_cubes, self.walls, self.water, self.bullets, now, dt_mult, self.zone_center, self.zone_radius)
+                    if e.check_zone(self.zone_center, self.zone_radius, now) and e.hp <= 0:
+                        self.power_cubes.append(PowerCube(e.rect.centerx, e.rect.centery))
+                        self.enemies.remove(e)
+                for p in self.particles[:]:
+                    p.update(dt_mult)
+                    if p.size <= 0: self.particles.remove(p)
+                for b in self.bullets[:]:
+                    b.update(self.walls, dt_mult)
+                    if b.dead:
+                        if b in self.bullets: self.bullets.remove(b)
+                        continue
+                    for ent in all_ents:
+                        if ent != b.owner and ent.rect.collidepoint(b.x, b.y):
+                            ent.hp -= b.damage
+                            self.create_explosion(b.x, b.y, b.color, 8)
+                            if b in self.bullets: self.bullets.remove(b)
+                            if ent.hp <= 0:
+                                self.create_explosion(ent.rect.centerx, ent.rect.centery, ent.color, 30)
+                                self.power_cubes.append(PowerCube(ent.rect.centerx, ent.rect.centery))
+                                if ent == self.player: self.state = "GAMEOVER"
+                                else:
+                                    if ent in self.enemies: self.enemies.remove(ent)
+                                    if b.owner == self.player: self.score += 1; self.player.heal(5)
+                            break
+                if not self.enemies: self.state = "WIN"
+                self.draw_world(now, dt_mult)
+                ui_rect = pygame.Rect(20, 20, 320, 60)
+                pygame.draw.rect(screen, (0,0,0, 150), ui_rect, border_radius=10)
+                draw_text_with_shadow(screen, f"Spieler: {len(self.enemies) + 1}  |  Kills: {self.score}", font, WHITE, 40, 30)
+
+            elif self.state in ["WIN", "GAMEOVER"]:
+                if not self.processed_result:
+                    rank = len(self.enemies) + 1
+                    gained = 10 if rank == 1 else (5 if rank <= 5 else -3)
+                    self.total_trophies = max(0, self.total_trophies + gained)
+                    save_data(self.total_trophies)
+                    self.processed_result = True
+                    self.last_gained = gained
+                screen.fill((20, 10, 10) if self.state == "GAMEOVER" else (10, 25, 10))
+                if self.state == "WIN": draw_text_with_shadow(screen, "EPISCHER SIEG", title_font, GOLD, SCREEN_WIDTH//2-250, SCREEN_HEIGHT//2-100)
+                else: draw_text_with_shadow(screen, f"PLATZ {len(self.enemies) + 1}", title_font, RED, SCREEN_WIDTH//2-150, SCREEN_HEIGHT//2-100)
+                sign = "+" if self.last_gained > 0 else ""
+                draw_text_with_shadow(screen, f"{sign}{self.last_gained} Trophäen", font, WHITE, SCREEN_WIDTH//2-80, SCREEN_HEIGHT//2+20)
+                draw_text_with_shadow(screen, "Klicke zum Fortfahren", small_font, GRAY, SCREEN_WIDTH//2-90, SCREEN_HEIGHT//2+100)
+                if pygame.mouse.get_pressed()[0]: self.state = "MENU"
+
+            pygame.display.flip()
+            await asyncio.sleep(0)
+
+asyncio.run(Game().run())
+`;
+                // Python-Code in der virtuellen Browser-Sandbox ausführen
+                await pyodide.runPythonAsync(pythonGameCode);
+
+            } catch (err) {
+                status.style.color = "#ff0055";
+                status.innerText = "Kritischer Fehler beim Engine-Boot: " + err;
+                btn.disabled = false;
+                btn.innerText = "Erneut versuchen";
+            }
+        }
+    </script>
+</body>
+</html>
